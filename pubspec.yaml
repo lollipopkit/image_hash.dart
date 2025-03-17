@@ -1,6 +1,6 @@
 name: image_hash
-description: This package allows you to generate hash values from images and compare them to determine similarity, making it useful for tasks like finding duplicate or similar images, image recognition, and content-based image retrieval.
-version: 1.0.9
+description: This package allows you to generate hash values from images and compare them to determine similarity,.
+version: 1.0.10
 repository: https://github.com/lollipopkit/image_hash.dart
 
 environment:

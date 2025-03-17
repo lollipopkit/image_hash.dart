@@ -9,11 +9,13 @@ class _SimilarImagesParams {
   final String directoryPath;
   final List<String> exts;
   final int distanceThreshold;
+  final HashFn hashFn;
 
   _SimilarImagesParams({
     required this.directoryPath,
     required this.exts,
     required this.distanceThreshold,
+    required this.hashFn,
   });
 }
 
@@ -134,7 +136,7 @@ void _findSimilarImagesIsolate(
           SimilarImagesProgressProcessingImage(i + 1, files.length, filePath));
       final img = await PlatformFileReader.decodeImageFromPath(filePath);
       if (img != null) {
-        final hash = ImageHasher.perceptual(img);
+        final hash = params.hashFn.hashImg(img);
         imageHashes[filePath] = hash;
       }
     } catch (e) {
@@ -198,6 +200,7 @@ Future<List<SimilarImagesGroup>> findSimilarImages(
   List<String> exts = const ['.jpg', '.jpeg', '.png'],
   int distanceThreshold = 20,
   void Function(SimilarImagesProgress progress)? onProgress,
+  HashFn hashFn = HashFn.perceptual,
 }) async {
   // Create ports for communication
   final receivePort = ReceivePort();
@@ -207,6 +210,7 @@ Future<List<SimilarImagesGroup>> findSimilarImages(
     directoryPath: directoryPath,
     exts: exts,
     distanceThreshold: distanceThreshold,
+    hashFn: hashFn,
   );
 
   // Spawn the isolate
