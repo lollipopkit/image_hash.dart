@@ -97,7 +97,7 @@ void main() {
       
       final hash = ImageHasher.perceptualHash(img!);
       final bytes = hash.toBytes();
-      final fromBytes = ImageHash.fromBytes(bytes, HashKind.perceptual);
+      final fromBytes = ImageHash.fromBytes(bytes, HashFn.perceptual);
       
       expect(hash.distance(fromBytes), equals(0));
     });
@@ -179,8 +179,8 @@ Future<int> _perceptualHash(
     return throw Exception('Load failed');
   }
 
-  final hash1 = ImageHasher.perceptualHash(img1);
-  final hash2 = ImageHasher.perceptualHash(img2);
+  final hash1 = ImageHasher.perceptualHash(img1, size: 64);
+  final hash2 = ImageHasher.perceptualHash(img2, size: 64);
 
   final distance = hash1.distance(hash2);
   print('Perceptual\n $origin: $hash1 || $target: $hash2 || $distance');
@@ -199,8 +199,8 @@ Future<int> _averageHash(
     return throw Exception('Load failed');
   }
 
-  final hash1 = ImageHasher.averageHash(img1);
-  final hash2 = ImageHasher.averageHash(img2);
+  final hash1 = ImageHasher.average(img1);
+  final hash2 = ImageHasher.average(img2);
 
   final distance = hash1.distance(hash2);
   print('Average\n $origin: $hash1 || $target: $hash2 || $distance');
@@ -220,8 +220,8 @@ Future<int> _differenceHash(
     return throw Exception('Load failed');
   }
 
-  final hash1 = ImageHasher.differenceHash(img1, direction: direction);
-  final hash2 = ImageHasher.differenceHash(img2, direction: direction);
+  final hash1 = ImageHasher.difference(img1, direction: direction);
+  final hash2 = ImageHasher.difference(img2, direction: direction);
 
   final distance = hash1.distance(hash2);
   print('Diff(${direction.name})\n $origin: $hash1 || $target: $hash2 || $distance');
@@ -240,8 +240,8 @@ Future<int> _waveletHash(
     return throw Exception('Load failed');
   }
 
-  final hash1 = ImageHasher.waveletHash(img1);
-  final hash2 = ImageHasher.waveletHash(img2);
+  final hash1 = ImageHasher.wavelet(img1);
+  final hash2 = ImageHasher.wavelet(img2);
 
   final distance = hash1.distance(hash2);
   print('Wavelet\n $origin: $hash1 || $target: $hash2 || $distance');
@@ -260,8 +260,8 @@ Future<int> _medianHash(
     return throw Exception('Load failed');
   }
 
-  final hash1 = ImageHasher.medianHash(img1);
-  final hash2 = ImageHasher.medianHash(img2);
+  final hash1 = ImageHasher.median(img1);
+  final hash2 = ImageHasher.median(img2);
 
   final distance = hash1.distance(hash2);
   print('Median\n $origin: $hash1 || $target: $hash2 || $distance');
