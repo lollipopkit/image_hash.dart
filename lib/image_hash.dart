@@ -1,8 +1,4 @@
-/// Support for doing something awesome.
-///
-/// More dartdocs go here.
+/// Image hash library
 library;
 
 export 'src/image_hash_base.dart';
-
-// TODO: Export any libraries intended for clients of this package.
