@@ -3,11 +3,9 @@ description: Caclulate hash of an image.
 version: 1.0.0
 repository: https://github.com/lollipopkit/image_hash.dart
 publish_to: https://pub.dev
-publish_ignore:
-  - test/fixtures/**
 
 environment:
-  sdk: ^3.7.0
+  sdk: ^3.0.0
 
 # Add regular dependencies here.
 dependencies:
