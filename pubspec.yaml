@@ -1,6 +1,6 @@
 name: image_hash
 description: Caclulate hash of an image.
-version: 1.0.0
+version: 1.0.8
 repository: https://github.com/lollipopkit/image_hash.dart
 
 environment:
