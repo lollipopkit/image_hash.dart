@@ -1,6 +1,6 @@
 name: image_hash
-description: Caclulate hash of an image.
-version: 1.0.8
+description: This package allows you to generate hash values from images and compare them to determine similarity, making it useful for tasks like finding duplicate or similar images, image recognition, and content-based image retrieval.
+version: 1.0.9
 repository: https://github.com/lollipopkit/image_hash.dart
 
 environment:

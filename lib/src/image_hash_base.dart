@@ -28,7 +28,7 @@ class ImageHash {
   }
 
   /// Create an image hash from a string.
-  /// 
+  ///
   /// eg.: 'average:0000000000000000'
   factory ImageHash.fromString(String hashString) {
     final parts = hashString.split(':');

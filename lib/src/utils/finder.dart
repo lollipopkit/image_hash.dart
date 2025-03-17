@@ -1,8 +1,7 @@
 import 'dart:async';
-import 'dart:io';
-import 'dart:isolate';
+// dart:isolate only on non-web
+import 'dart:isolate' if (dart.library.html) '';
 
-import 'package:image/image.dart';
 import 'package:image_hash/image_hash.dart';
 
 /// Parameters for the similar images isolate
@@ -108,19 +107,20 @@ void _findSimilarImagesIsolate(
   final sendPort = message.$1;
   final params = message.$2;
 
-  final directory = Directory(params.directoryPath);
-
   // Get all image files
   sendPort.send(SimilarImagesProgressScanDir());
-  final files = await directory
-      .list(recursive: true)
-      .where(
-        (e) =>
-            e is File &&
-            params.exts.any((ext) => e.path.toLowerCase().endsWith(ext)),
-      )
-      .cast<File>()
-      .toList();
+  List<String> files;
+  try {
+    files = await PlatformDirectory.listFiles(
+      params.directoryPath,
+      extensions: params.exts,
+      recursive: true,
+    );
+  } catch (e) {
+    sendPort.send(SimilarImagesProgressErr(e.toString(), params.directoryPath));
+    sendPort.send(<SimilarImagesGroup>[]);
+    return;
+  }
 
   sendPort.send(SimilarImagesProgressFoundImages(files.length));
 
@@ -128,17 +128,17 @@ void _findSimilarImagesIsolate(
   final imageHashes = <String, ImageHash>{};
 
   for (int i = 0; i < files.length; i++) {
-    final file = files[i];
+    final filePath = files[i];
     try {
       sendPort.send(
-          SimilarImagesProgressProcessingImage(i + 1, files.length, file.path));
-      final img = decodeImage(await file.readAsBytes());
+          SimilarImagesProgressProcessingImage(i + 1, files.length, filePath));
+      final img = await PlatformFileReader.decodeImageFromPath(filePath);
       if (img != null) {
         final hash = ImageHasher.perceptual(img);
-        imageHashes[file.path] = hash;
+        imageHashes[filePath] = hash;
       }
     } catch (e) {
-      sendPort.send(SimilarImagesProgressErr(e.toString(), file.path));
+      sendPort.send(SimilarImagesProgressErr(e.toString(), filePath));
     }
   }
 
@@ -190,6 +190,9 @@ void _findSimilarImagesIsolate(
 /// - [distanceThreshold] is the threshold for the distance between two images. Defaults to 20.
 /// Bigger value means less similar images.
 /// - [onProgress] is a callback that will be called with progress updates.
+///
+/// Note: On web platforms, this function requires different usage patterns.
+/// In browsers, you need to provide URLs to images or use the File API with user-selected files.
 Future<List<SimilarImagesGroup>> findSimilarImages(
   String directoryPath, {
   List<String> exts = const ['.jpg', '.jpeg', '.png'],
@@ -228,4 +231,76 @@ Future<List<SimilarImagesGroup>> findSimilarImages(
   });
 
   return completer.future;
+}
+
+/// Web-compatible version to find similar images from a list of image URLs.
+///
+/// This function is designed for web environments where directory access is not available.
+/// - [imageUrls] is the list of image URLs or paths to compare
+/// - [distanceThreshold] is the threshold for the distance between two images
+/// - [onProgress] is a callback that will be called with progress updates
+Future<List<SimilarImagesGroup>> findSimilarImagesWeb(
+  List<String> imageUrls, {
+  int distanceThreshold = 20,
+  void Function(SimilarImagesProgress progress)? onProgress,
+}) async {
+  onProgress?.call(SimilarImagesProgressFoundImages(imageUrls.length));
+
+  // Calculate hash for all images
+  final imageHashes = <String, ImageHash>{};
+
+  for (int i = 0; i < imageUrls.length; i++) {
+    final url = imageUrls[i];
+    try {
+      onProgress?.call(
+          SimilarImagesProgressProcessingImage(i + 1, imageUrls.length, url));
+      final img = await PlatformFileReader.decodeImageFromPath(url);
+      if (img != null) {
+        final hash = ImageHasher.perceptual(img);
+        imageHashes[url] = hash;
+      }
+    } catch (e) {
+      onProgress?.call(SimilarImagesProgressErr(e.toString(), url));
+    }
+  }
+
+  // Find similar image groups
+  final similarGroups = <SimilarImagesGroup>[];
+  final processed = <String>{};
+
+  int currentEntry = 0;
+  final totalEntries = imageHashes.length;
+
+  for (final entry1 in imageHashes.entries) {
+    currentEntry++;
+    if (currentEntry % 10 == 0) {
+      onProgress
+          ?.call(SimilarImagesProgressCompare(currentEntry, totalEntries));
+    }
+
+    if (processed.contains(entry1.key)) continue;
+
+    final currentGroup = <(String, ImageHash)>[];
+    currentGroup.add((entry1.key, entry1.value));
+    processed.add(entry1.key);
+
+    for (final entry2 in imageHashes.entries) {
+      if (entry1.key == entry2.key || processed.contains(entry2.key)) continue;
+
+      final distance = entry1.value.distance(entry2.value);
+      if (distance < distanceThreshold) {
+        currentGroup.add((entry2.key, entry2.value));
+        processed.add(entry2.key);
+      }
+    }
+
+    // Only add groups with more than one image
+    if (currentGroup.length > 1) {
+      similarGroups.add(currentGroup);
+    }
+  }
+
+  onProgress
+      ?.call(SimilarImagesProgressFoundSimilarGroups(similarGroups.length));
+  return similarGroups;
 }

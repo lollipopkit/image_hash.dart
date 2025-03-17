@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:image/image.dart';
@@ -60,10 +59,10 @@ enum HashFn {
   /// Get the [ImageHash] from an [Image].
   ///
   /// - [size] is the size of calulating the hash, default is 32.
-  /// 
+  ///
   /// Some hash functions have different parameters, see the specific function for details.
   /// eg.: [ImageHasher.difference] has [direction] parameter.
-  ImageHash hashImg(Image img, {int size = 16}) {
+  ImageHash hashImg(Image img, {int size = 8}) {
     return switch (this) {
       HashFn.average => ImageHasher.average(img, size: size),
       HashFn.perceptual => ImageHasher.perceptual(img, size: size),
@@ -81,12 +80,13 @@ enum HashFn {
   /// You must ensure the file is an image file.
   Future<ImageHash> hashFile(
     String path, {
-    int size = 16,
+    int size = 8,
     Image? Function(Uint8List data, {int? frame})? decodeImageFn,
   }) async {
     decodeImageFn ??= decodeImage;
 
-    final img = decodeImageFn(await File(path).readAsBytes());
+    final bytes = await PlatformFileReader.readBytes(path);
+    final img = decodeImageFn(bytes);
     if (img == null) {
       throw Exception('decode image failed');
     }
