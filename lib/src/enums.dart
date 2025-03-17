@@ -66,7 +66,7 @@ enum HashFn {
   ImageHash hashImg(Image img, {int size = 16}) {
     return switch (this) {
       HashFn.average => ImageHasher.average(img, size: size),
-      HashFn.perceptual => ImageHasher.perceptualHash(img, size: size),
+      HashFn.perceptual => ImageHasher.perceptual(img, size: size),
       HashFn.difference => ImageHasher.difference(img, size: size),
       HashFn.wavelet => ImageHasher.wavelet(img, size: size),
       HashFn.median => ImageHasher.median(img, size: size),

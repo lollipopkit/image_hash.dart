@@ -1,81 +1,22 @@
 # Image Hash
+This package allows you to generate hash values from images and compare them to determine similarity, making it useful for tasks like finding duplicate or similar images, image recognition, and content-based image retrieval.
 
-A Dart library for perceptual image hashing and comparison. This package allows you to generate hash values from images and compare them to determine similarity, making it useful for tasks like finding duplicate or similar images, image recognition, and content-based image retrieval.
-
-## Features
-
-- Multiple hashing algorithms:
-  - **Perceptual Hash**: Robust against compression and minor color adjustments
-  - **Average Hash**: Fast but less accurate for certain transformations
-  - **Difference Hash**: Good at detecting edges (supporting horizontal, vertical, or both directions)
-  - **Wavelet Hash**: More accurate but computationally intensive
-  - **Median Hash**: Uses median values for improved robustness
-- Compare images using distance or similarity metrics
-- Batch operations for comparing against multiple images
-- Hash conversion to/from hex strings and byte arrays
-
-## Installation
-
-Add this to your package's `pubspec.yaml` file:
-
-```yaml
-dependencies:
-  image_hash: ^x.y.z
-```
 
 ## Usage
-
-### Creating Hashes
-
-```dart
-import 'package:image_hash/image_hash.dart';
-import 'package:image/image.dart' as img;
-
-void main() {
-  // Load an image
-  final image = img.decodeImage(File('path/to/image.jpg').readAsBytesSync());
-  
-  // Generate different types of hashes
-  final averageHash = ImageHasher.averageHash(image);
-  final perceptualHash = ImageHasher.perceptualHash(image);
-  final differenceHash = ImageHasher.differenceHash(image);
-  final waveletHash = ImageHasher.waveletHash(image);
-  final medianHash = ImageHasher.medianHash(image);
-  
-  // Custom parameters
-  final customDifferenceHash = ImageHasher.differenceHash(
-    image,
-    direction: HashDirection.both,
-    size: 8
-  );
-}
-```
-
-### Hash Conversion
-
-```dart
-// Convert hash to hex string
-final hash = ImageHasher.averageHash(image);
-final hexString = hash.toString();  // Format: "average:1a2b3c4d5e6f7890"
-
-// Create hash from hex string
-final newHash = ImageHash.fromHex("1a2b3c4d5e6f7890", HashKind.average);
-
-// Convert to and from bytes
-final bytes = hash.toBytes();
-final hashFromBytes = ImageHash.fromBytes(bytes, HashKind.average);
-```
 
 ### Comparing Images
 
 ```dart
 // Load two images
-final image1 = img.decodeImage(File('image1.jpg').readAsBytesSync());
-final image2 = img.decodeImage(File('image2.jpg').readAsBytesSync());
+final image1 = img.decodeImage(await File('image1.jpg').readAsBytes());
 
 // Generate hashes
-final hash1 = ImageHasher.perceptualHash(image1);
-final hash2 = ImageHasher.perceptualHash(image2);
+// ImageHasher.perceptual = HashFn.perceptual.hashImage
+final hash1 = await HashFn.perceptual.hashFile(
+  'image2.jpg',
+  size: 16,
+);
+final hash2 = ImageHasher.perceptual(image1);
 
 // Compare using distance (lower means more similar)
 int distance = hash1.distance(hash2);  // 0-64 range (0 is identical)
@@ -87,12 +28,44 @@ double similarity = hash1.similarity(hash2);  // 0.0-1.0 range (1.0 is identical
 bool isSimilar = hash1.isSimilar(hash2, threshold: 0.85);
 ```
 
+### Finding Similar Images
+
+```dart
+import 'dart:io';
+import 'package:image_hash/image_hash.dart';
+
+void main() async {
+  // Find all similar images in a directory
+  final similarGroups = await findSimilarImages(
+    '/path/to/images',
+    exts: ['.jpg', '.jpeg', '.png'],
+    distanceThreshold: 20, // Lower values find more similar images
+    onProgress: (progress) {
+      print(progress); // Shows real-time progress updates
+    },
+  );
+  
+  // Process the similar image groups
+  for (int i = 0; i < similarGroups.length; i++) {
+    final group = similarGroups[i];
+    print('Similar image group ${i + 1} (${group.length} images):');
+    for (final (path, hash) in group) {
+      print('  $path');
+    }
+  }
+}
+```
+
 ### Batch Operations
 
 ```dart
 // Compare one hash against multiple hashes
-final targetHash = ImageHasher.perceptualHash(targetImage);
-final hashes = images.map((img) => ImageHasher.perceptualHash(img)).toList();
+final targetHash = ImageHasher.perceptual(targetImage);
+final hashes = [
+  'image1.jpg',
+  'image2.jpg',
+  'image3.jpg',
+].map((img) => ImageHasher.perceptual(img)).toList();
 
 // Get similarity scores for all images
 List<double> similarities = ImageHasher.batchCompareSimilarity(targetHash, hashes);
@@ -104,6 +77,25 @@ List<int> distances = ImageHasher.batchCompareDistance(targetHash, hashes);
 int mostSimilarIndex = similarities.indexOf(similarities.reduce(math.max));
 ```
 
+### Hash Conversion
+
+```dart
+// Convert hash to hex string
+final hash = ImageHasher.average(image);
+final hexString = hash.toString();  // Format: "average:1a2b3c4d5e6f7890"
+
+// Create hash from hex string
+final newHash = ImageHash.fromHex("1a2b3c4d5e6f7890", HashFn.average);
+
+// Create hash from string
+final hashFromString = ImageHash.fromString("average:1a2b3c4d5e6f7890");
+
+// Convert to and from bytes
+final bytes = hash.toBytes();
+final hashFromBytes = ImageHash.fromBytes(bytes, HashFn.average);
+```
+
+
 ## API Reference
 
 ### Classes
@@ -113,18 +105,13 @@ int mostSimilarIndex = similarities.indexOf(similarities.reduce(math.max));
 
 ### Enums
 
-- `HashKind`: Defines the type of hash algorithm (average, perceptual, difference, wavelet, median)
+- `HashFn`: Defines the type of hash algorithm (average, perceptual, difference, wavelet, median)
 - `HashDirection`: Specifies the direction for the difference hash algorithm (horizontal, vertical, both)
 
-## Tips for Best Results
+### Utils
 
-- For general use, `perceptualHash` usually provides the best balance of accuracy and speed
-- When comparing images, a similarity threshold between 0.85-0.95 often works well
-- The ideal hash algorithm depends on your specific use case:
-  - `averageHash`: Best for finding exact duplicates or very similar images
-  - `differenceHash`: Good for detecting structural/edge changes
-  - `waveletHash`: Best for detecting subtle differences, but slower
-  - `medianHash`: More robust against noise than average hash
+- `findSimilarImages`: Function to find groups of similar images in a directory
+
 
 ## License
 

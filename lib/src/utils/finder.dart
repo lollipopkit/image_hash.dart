@@ -134,7 +134,7 @@ void _findSimilarImagesIsolate(
           SimilarImagesProgressProcessingImage(i + 1, files.length, file.path));
       final img = decodeImage(await file.readAsBytes());
       if (img != null) {
-        final hash = ImageHasher.perceptualHash(img);
+        final hash = ImageHasher.perceptual(img);
         imageHashes[file.path] = hash;
       }
     } catch (e) {

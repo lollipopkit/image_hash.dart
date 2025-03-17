@@ -255,7 +255,7 @@ abstract final class ImageHasher {
   }
 
   /// Calculate the perceptual hash of an image.
-  static ImageHash perceptualHash(Image img, {int size = 32}) {
+  static ImageHash perceptual(Image img, {int size = 32}) {
     if (size < 8) {
       throw ArgumentError('Size must be at least 8');
     }

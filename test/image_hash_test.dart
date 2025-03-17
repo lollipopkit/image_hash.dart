@@ -85,7 +85,7 @@ void main() {
       final img = decodeImage(await File('${_testDir}origin.png').readAsBytes());
       expect(img, isNotNull);
       
-      final hash = ImageHasher.perceptualHash(img!);
+      final hash = ImageHasher.perceptual(img!);
       final fromHex = ImageHash.fromString(hash.toString());
       
       expect(hash.distance(fromHex), equals(0));
@@ -95,7 +95,7 @@ void main() {
       final img = decodeImage(await File('${_testDir}origin.png').readAsBytes());
       expect(img, isNotNull);
       
-      final hash = ImageHasher.perceptualHash(img!);
+      final hash = ImageHasher.perceptual(img!);
       final bytes = hash.toBytes();
       final fromBytes = ImageHash.fromBytes(bytes, HashFn.perceptual);
       
@@ -111,9 +111,9 @@ void main() {
       expect(img2, isNotNull);
       expect(img3, isNotNull);
       
-      final hash1 = ImageHasher.perceptualHash(img1!);
-      final hash2 = ImageHasher.perceptualHash(img2!);
-      final hash3 = ImageHasher.perceptualHash(img3!);
+      final hash1 = ImageHasher.perceptual(img1!);
+      final hash2 = ImageHasher.perceptual(img2!);
+      final hash3 = ImageHasher.perceptual(img3!);
       
       expect(hash1.similarity(hash2), greaterThanOrEqualTo(0.9));
       expect(hash1.isSimilar(hash2), isTrue);
@@ -133,10 +133,10 @@ void main() {
       expect(img2, isNotNull);
       expect(img3, isNotNull);
       
-      final targetHash = ImageHasher.perceptualHash(img1!);
+      final targetHash = ImageHasher.perceptual(img1!);
       final hashes = [
-        ImageHasher.perceptualHash(img2!),
-        ImageHasher.perceptualHash(img3!)
+        ImageHasher.perceptual(img2!),
+        ImageHasher.perceptual(img3!)
       ];
       
       final similarities = ImageHasher.batchCompareSimilarity(targetHash, hashes);
@@ -154,10 +154,10 @@ void main() {
       expect(img2, isNotNull);
       expect(img3, isNotNull);
       
-      final targetHash = ImageHasher.perceptualHash(img1!);
+      final targetHash = ImageHasher.perceptual(img1!);
       final hashes = [
-        ImageHasher.perceptualHash(img2!),
-        ImageHasher.perceptualHash(img3!)
+        ImageHasher.perceptual(img2!),
+        ImageHasher.perceptual(img3!)
       ];
       
       final distances = ImageHasher.batchCompareDistance(targetHash, hashes);
@@ -179,8 +179,8 @@ Future<int> _perceptualHash(
     return throw Exception('Load failed');
   }
 
-  final hash1 = ImageHasher.perceptualHash(img1, size: 64);
-  final hash2 = ImageHasher.perceptualHash(img2, size: 64);
+  final hash1 = ImageHasher.perceptual(img1, size: 64);
+  final hash2 = ImageHasher.perceptual(img2, size: 64);
 
   final distance = hash1.distance(hash2);
   print('Perceptual\n $origin: $hash1 || $target: $hash2 || $distance');
